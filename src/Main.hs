@@ -1,5 +1,8 @@
 module Main where
 
-main :: IO ()
-main = do
-  putStrLn "hello world"
+import CLaSH.Prelude
+import Decode
+
+-- topEntity :: Signal (BitVector 32)
+-- topEntity = decode
+
