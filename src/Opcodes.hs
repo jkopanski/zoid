@@ -1,5 +1,7 @@
 module Opcodes where
 
+import Data.Maybe (fromJust)
+
 import CLaSH.Prelude
 import Types
 import ISA
@@ -14,7 +16,7 @@ data Operation = Load
                | OpImm
                | Auipc
                | OpImm32
-               | NoUse0
+               | VLIW48a
                | Store
                | StoreFp
                | Custom1
@@ -22,7 +24,7 @@ data Operation = Load
                | Op
                | Lui
                | Op32
-               | NoUse1
+               | VLIW64
                | MAdd
                | MSub
                | NMSub
@@ -30,7 +32,7 @@ data Operation = Load
                | OpFp
                | Rederved0
                | Custom2
-               | NoUse2
+               | VLIW48b
                | Branch
                | JalR
                | Reserved1
@@ -38,17 +40,59 @@ data Operation = Load
                | System
                | Reserved2
                | Custom3
-               | NoUse3
-               deriving (Show, Eq, Ord, Enum, Bounded)
+               | VLIW80
+               deriving (Show, Eq, Enum, Ord, Bounded)
+
+opcodes = [ (Load,        3)
+          , (LoadFp,      7)
+          , (Custom0,    11)
+          , (MiscMem,    15)
+          , (OpImm,      19)
+          , (Auipc,      23)
+          , (OpImm32,    27)
+          , (NoUse0,     31)
+          , (Store,      35)
+          , (StoreFp,    39)
+          , (Custom1,    43)
+          , (Amo,        47)
+          , (Op,         51)
+          , (Lui,        55)
+          , (Op32,       59)
+          , (NoUse1,     63)
+          , (MAdd,       67)
+          , (MSub,       71)
+          , (NMSub,      75)
+          , (NMAdd,      79)
+          , (OpFp,       83)
+          , (Rederved0,  87)
+          , (Custom2,    91)
+          , (NoUse2,     95)
+          , (Branch,     99)
+          , (JalR,      103)
+          , (Reserved1, 107)
+          , (Jal,       111)
+          , (System,    115)
+          , (Reserved2, 119)
+          , (Custom3,   123)
+          , (NoUse3,    127)
+          ]
+
+-- instance Enum Operation where
+--   fromEnum x = fromJust $ flip lookup opcodes x
+--   toEnum = fromJust . flip lookup (fmap swap opcodes)
+--     where swap (x, y) = (y, x)
 
 -- | Class BitEnum defines is similiar to Enum but operates on clash BitVector.
-class Opcode a where
-  toOpcode :: BitVector 7 -> a
-  fromOpcode :: a -> BitVector 7
+-- class Enum a => Opcode a where
+--   toOpcode :: BitVector 7 -> a
+--   fromOpcode :: a -> BitVector 7
 
-instance Opcode Operation where
-  fromOpcode = fromInteger . toInteger . (+ 3) . (4 *) . fromEnum
-  toOpcode   n = toEnum $ fromInteger $ div (toInteger n) 4
+-- This solutions gets 'compiled out' ;)
+-- newtype Opcode = Opcode Operation
+
+-- instance Enum Opcode where
+--   toEnum n = Opcode (toEnum $ subtract 3 $ div n 4)
+--   fromEnum (Opcode x) = (+ 3) . (4 *) $ fromEnum x
 
 data RType = R { rFunct7 :: BitVector 7
                , rRs2    :: BitVector 5
@@ -61,7 +105,7 @@ data RType = R { rFunct7 :: BitVector 7
 data UType = U { uImm3   :: Bit
                , uImm2   :: BitVector 11
                , uImm1   :: BitVector 5
-               , uimm0   :: BitVector 3
+               , uImm0   :: BitVector 3
                , uRd     :: BitVector 5
                , uOpcode :: Operation
                }
@@ -73,6 +117,24 @@ data UJType = UJ { ujImm3   :: Bit
                  , ujRd     :: BitVector 5
                  , ujOpcode :: Operation
                  }
+
+data Instruction = BitVector 32
+                | UType
+                | UJType
+                deriving Show
+
+decode :: Instruction -> ISA
+decode 
+decodeU  :: UType  -> ISA
+decodeU i =
+  case uOpcode i of
+    Auipc -> AUIPC dest imm
+    Lui   -> LUI   dest imm
+    where dest = fromInteger $ toInteger $ uRd i
+          imm  = fromInteger $ toInteger $ uImm3 i
+               ++# uImm2 i
+               ++# uImm1 i
+               ++# uImm0 i
 
 decodeUJ :: UJType -> ISA
 decodeUJ i =

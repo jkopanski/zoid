@@ -14,3 +14,9 @@ cabal.sandbox.config
 *.aux
 *.hp
 .stack-work/
+
+# risc-v spec
+doc
+
+# CLaSH generated hdl
+verilog
