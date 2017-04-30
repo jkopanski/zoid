@@ -1,16 +1,14 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Decode where
 
 import CLaSH.Prelude hiding (Word, bit)
 
 -- Decoding is much like parsing
--- newtype Decoder n a = Decoder { decode :: BitVector n -> [(a, BitVector m)] }
--- GADTs are used here for type constraints
-data Decoder a where
-  Decoder :: (KnownNat (BitSize a), BitPack a)
-          => (BitVector (n + BitSize a) -> [(a, BitVector n)])
-          -> Decoder a
+newtype Decoder a = Decoder
+  { decode :: forall n. (KnownNat n, KnownNat (BitSize a))
+           => BitVector (n + BitSize a) -> [(a, BitVector n)]
+  }
 
 data Opcode = Load | Store deriving (Eq, Show, Enum)
 
@@ -20,15 +18,16 @@ instance BitPack Opcode where
   pack = toEnum . fromEnum
   unpack = toEnum . fromEnum
 
-bit :: KnownNat n
-    => BitVector (n + BitSize Bit) -> [(Bit, BitVector n)]
-bit v =
-  if size# v == 0
-     then []
-     else [split v]
+runDecoder :: forall a n. (KnownNat n, KnownNat (BitSize a))
+           => Decoder a -> BitVector (n + BitSize a) -> a
+runDecoder d b =
+  let [(res, bits)] = decode d b
+   in if size# bits /= 0
+         then error "did not consume all bits"
+         else res
 
-bitA :: Decoder Bit
-bitA = Decoder $ \v ->
+bit :: Decoder Bit
+bit = Decoder $ \v ->
   if size# v == 0
      then []
      else [split v]
