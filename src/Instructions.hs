@@ -2,8 +2,8 @@
 
 module Instructions where
 
-import CLaSH.Prelude
-import CLaSH.Class.BitPack
+import Clash.Prelude
+import Clash.Class.BitPack
 
 import Opcodes
 import Registers

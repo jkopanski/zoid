@@ -1,7 +1,7 @@
 module ISA where
 
-import CLaSH.Prelude
-import CLaSH.Sized.Unsigned
+import Clash.Prelude
+import Clash.Sized.Unsigned
 
 type Register    = BitVector 5
 type Funct3      = BitVector 3

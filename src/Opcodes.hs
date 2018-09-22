@@ -4,7 +4,7 @@ module Opcodes
   ( Opcode (..) ) where
 
 import Prelude
-import CLaSH.Class.BitPack
+import Clash.Class.BitPack
 
 data RType
 data R4Type

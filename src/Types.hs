@@ -1,6 +1,6 @@
 module Types where
 
-import CLaSH.Prelude
+import Clash.Prelude
 
 data Word     = W  (BitVector 32)
 data Halfword = HW (BitVector 16)

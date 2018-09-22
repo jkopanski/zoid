@@ -2,7 +2,7 @@ module Registers.General
   ( Register (..) ) where
 
 import Prelude
-import CLaSH.Class.BitPack
+import Clash.Class.BitPack
 
 data Register
   = Zero -- Hard-wired zero

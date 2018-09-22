@@ -2,7 +2,7 @@ module Registers.Floating
   ( FPRegister (..) ) where
 
 import Prelude
-import CLaSH.Class.BitPack
+import Clash.Class.BitPack
 
 data FPRegister
   = FT0  -- FP temporaries

@@ -2,7 +2,7 @@
 
 module Decode where
 
-import CLaSH.Prelude hiding (Word, bit)
+import Clash.Prelude hiding (Word, bit)
 
 -- Decoding is much like parsing
 newtype Decoder a = Decoder
