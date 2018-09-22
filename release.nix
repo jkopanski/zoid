@@ -1,14 +1,6 @@
 let
-  haskellBuildInputs = haskellPackages: with haskellPackages; [
-    clash-ghc
-    shake
-  ];
-
   config = {
     packageOverrides = pkgs: rec {
-
-      ghcCommand = "ghc";
-      ghcCommandCaps = pkgs.lib.toUpper ghcCommand;
 
       haskellPackages = pkgs.haskellPackages.override {
         overrides = haskellPackagesNew: haskellPackagesOld: rec {
@@ -18,11 +10,10 @@ let
             haskellPackagesNew.callPackage ./nix/clash-prelude.nix { }
           ) "doctests";
 
-          ghcEnv = haskellPackagesNew.ghcWithHoogle haskellBuildInputs;
+          zoid = haskellPackagesNew.callPackage ./default.nix { };
         };
       };
 
-      zoid = pkgs.callPackage ./default.nix { };
     }; 
   };
 
@@ -30,5 +21,17 @@ let
   pkgs = import <unstable> { inherit config; };
   
 in
-  { zoid = pkgs.zoid;
+  { zoid = pkgs.lib.overrideDerivation pkgs.haskellPackages.zoid (drv: rec {
+      configurePhase = ''
+        runHook preConfigure
+        export GHC_PACKAGE_PATH="$packageConfDir:"
+        runHook postConfigure
+      '';
+      setupCommand = "./Setup"; 
+      buildPhase = ''
+        runHook preBuild
+        ${setupCommand} -j$NIX_BUILD_CORES
+        runHook postBuild
+      '';
+    });
   }

@@ -1,6 +1,6 @@
-module Main where
+module Zoid where
 
-import CLaSH.Prelude
+import Clash.Prelude
 import Opcodes
 
 -- topEntity :: Signal (BitVector 32)
