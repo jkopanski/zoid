@@ -1,12 +1,16 @@
-{-# LANGUAGE DataKinds #-}
+{-# language DataKinds         #-}
+{-# language FlexibleInstances #-}
+{-# language GADTs             #-}
+{-# language TypeInType        #-}
 
 module Instructions where
 
-import Clash.Prelude
+import Clash.Prelude hiding (Word)
 import Clash.Class.BitPack
 
 import Opcodes
 import Registers
+import Types
 
 type Immediate = Signed 32
 
@@ -51,7 +55,6 @@ data Instr a where
   SRA  :: Register -> Register -> Register -> Instr ROp
   OR   :: Register -> Register -> Register -> Instr ROp
   AND  :: Register -> Register -> Register -> Instr ROp
-  deriving (Eq, Show)
 
 data Format
   = ROp
@@ -62,7 +65,7 @@ data Format
   | UJOp
   deriving (Eq, Show)
 
-type family InstrFormat (op :: Opcode) :: Format where
+type family InstrFormat (op :: (Opcode a)) :: Format where
   InstrFormat Load    = IOp
   InstrFormat LoadFp  = IOp
   -- to be extended elsewere
@@ -106,8 +109,14 @@ type family InstrFormat (op :: Opcode) :: Format where
 instance BitPack (Instr IOp) where
   type BitSize (Instr IOp) = 32
 
-  unpack w = case opcode w of
+  unpack w = undefined
+    -- let op = opcode w :: Opcode IType
+    --  in case op of
+    --   _ ->  LB 1 1 1
+
   pack = undefined
 
-opcode :: Word -> Opcode
+opcode
+  :: (BitSize (Opcode a) ~ 7, BitPack (Opcode a))
+  => Word -> Opcode a
 opcode = unpack . slice d6 d0

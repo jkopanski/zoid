@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances  #-}
 
-module Opcodes
-  ( Opcode (..) ) where
+module Opcodes where
 
 import Prelude
 import Clash.Class.BitPack

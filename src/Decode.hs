@@ -26,7 +26,7 @@ runDecoder d b =
          then error "did not consume all bits"
          else res
 
-bit :: Decoder Bit
+bit :: Decoder (BitVector 1)
 bit = Decoder $ \v ->
   if size# v == 0
      then []

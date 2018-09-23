@@ -18,24 +18,19 @@ import Data.Binary
 build = "build"
 src = "src"
 includeDir = src
-topV = "Zoid.v"
-
-binFile = build </> "chip.bin"
-pcfFile = "blackice.pcf"
+top = "Zoid.v"
 
 main :: IO ()
 main = shakeArgs shakeOptions { shakeFiles = build } $ do
-  action $ do
-    vs <- gatherVerilog
-    mapM_ putNormal vs
-    needed vs -- [binFile]
+  want [build </> top]
 
   phony "clean" $ do
     putNormal $ "Cleaning files in " <> show build
     removeFilesAfter build ["//*"]
 
-  clashRules
-  --icestormRules
+  "//*.v" %> \out -> do
+    putNormal out
+    clash out Verilog
 
 -- | Find all the hand written Verilog files as well as the verilog files
 -- compiled with Clash.
@@ -47,7 +42,15 @@ gatherVerilog = do
       listingFiles = flip replaceExtension "listing" <$> haskellBuild
   -- need listingFiles
   haskellHDLFiles <- fmap read <$> traverse readFile' listingFiles
-  pure $ nativeVerilogSources <> concat haskellHDLFiles
+  mapM_ putNormal haskellHDLFiles
+  pure $ nativeVerilogSources -- <> concat haskellHDLFiles
+
+replaceBaseDir :: FilePath -> FilePath -> FilePath
+replaceBaseDir path rep =
+  let dirs = splitDirectories path
+   in go dirs
+  where go (base:other:rest) = joinPath (rep:other:rest)
+        go _ = path
 
 srcToBuild :: FilePath -> FilePath -> FilePath -> FilePath
 srcToBuild source build path =
@@ -55,23 +58,23 @@ srcToBuild source build path =
       replaceEqual cond rep el = if el == cond then rep else el 
    in joinPath (replaceEqual source build <$> dirs)
   
-icestormRules :: Rules ()
-icestormRules = do
-  -- Use Yosys to compile some Verilog to a BLIF file
-  build </> "*.blif" %> \out -> do
-    vs <- gatherVerilog
-    needed vs
-    cmd_ "yosys -q -p" ["synth_ice40 -blif " <> out] vs
+-- icestormRules :: Rules ()
+-- icestormRules = do
+--   -- Use Yosys to compile some Verilog to a BLIF file
+--   build </> "*.blif" %> \out -> do
+--     vs <- gatherVerilog
+--     needed vs
+--     cmd_ "yosys -q -p" ["synth_ice40 -blif " <> out] vs
 
-  build </> "*.txt" %> \out -> do
-    let blif = out -<.> "blif"
-    need [blif]
-    cmd_ "arachne-pnr -d 8k -P tq144:4k -p" pcfFile blif "-o" out
+--   build </> "*.txt" %> \out -> do
+--     let blif = out -<.> "blif"
+--     need [blif]
+--     cmd_ "arachne-pnr -d 8k -P tq144:4k -p" pcfFile blif "-o" out
 
-  build </> "*.bin" %> \out -> do
-    let txt = out -<.> "txt"
-    need [txt]
-    cmd_ "icepack" txt out
+--   build </> "*.bin" %> \out -> do
+--     let txt = out -<.> "txt"
+--     need [txt]
+--     cmd_ "icepack" txt out
 
 clashRules :: Rules ()
 clashRules = do
@@ -97,6 +100,23 @@ clashRules = do
       vss <- compileWithClash bns
       zipWithM_ writeFile' outs (show <$> vss)
     )
+
+data Language
+  = Verilog
+  | Vhdl
+  | SystemVerilog
+
+instance Show Language where
+  show Verilog = "verilog"
+  show Vhdl = "vhdl"
+  show SystemVerilog = "systemverilog"
+
+clash :: FilePath -> Language -> Action ()
+clash path lang =
+  let hss     = replaceBaseDir path src -<.> "hs"
+      include = "-i" <> includeDir
+      hdl     = show lang
+   in cmd_ "clash" include "-odir" build "-outputdir" build ("--" <> hdl) hss
 
 -- | Given the name of some Haskell modules, compile them with Clash and write
 -- the output Verilog files to a ".listing" file in the build directory.
