@@ -33,5 +33,9 @@ in
         ${setupCommand} -j$NIX_BUILD_CORES
         runHook postBuild
       '';
+      installPhase = ''
+        mkdir $out
+        cp build/Zoid.v $out
+      '';
     });
   }
