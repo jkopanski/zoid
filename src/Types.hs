@@ -1,47 +1,46 @@
-{-# language GeneralizedNewtypeDeriving #-}
-{-# language UndecidableInstances       #-}
+{-# language
+    GeneralizedNewtypeDeriving
+  , UndecidableInstances
+  #-}
 module Types where
 
-import Clash.Prelude
+import Clash.Prelude hiding (Word)
 
-newtype Word  = Word { unWord :: BitVector 32 }
+newtype Word = W { unWord :: BitVector 32 }
   deriving BitPack
-data Halfword = HW (BitVector 16)
-data Byte     = B  (BitVector  8)
-data Nibble   = NB (BitVector  4)
+newtype Halfword = HW { unHalfword :: BitVector 16 }
+  deriving BitPack
+newtype Byte = B { unByte :: BitVector 8 }
+  deriving BitPack
+newtype Nibble = NB { unNibble :: BitVector 4 }
+  deriving BitPack
+
+newtype Immediate = Imm { unImmediate :: BitVector 32 }
+  deriving BitPack
 
 type Parcel   = Halfword
 
--- data Operation = Load
---                | LoadFp
---                | Custom0
---                | MiscMem
---                | OpImm
---                | Auipc
---                | OpImm32
---                | VLIW48a
---                | Store
---                | StoreFp
---                | Custom1
---                | Amo
---                | Op
---                | Lui
---                | Op32
---                | VLIW64
---                | MAdd
---                | MSub
---                | NMSub
---                | NMAdd
---                | OpFp
---                | Rederved0
---                | Custom2
---                | VLIW48b
---                | Branch
---                | JalR
---                | Reserved1
---                | Jal
---                | System
---                | Reserved2
---                | Custom3
---                | VLIW80
---                deriving (Show, Eq, Enum, Ord, Bounded)
+-- To make types more specific
+class (BitPack a) => ToNumber a where
+  toSigned :: a -> Signed (BitSize a)
+  toUnsigned :: a -> Unsigned (BitSize a)
+
+instance ToNumber Word where
+  toSigned = bitCoerce
+  toUnsigned = bitCoerce
+
+instance ToNumber Halfword where
+  toSigned = bitCoerce
+  toUnsigned = bitCoerce
+
+instance ToNumber Byte where
+  toSigned = bitCoerce
+  toUnsigned = bitCoerce
+
+instance ToNumber Nibble where
+  toSigned = bitCoerce
+  toUnsigned = bitCoerce
+
+instance ToNumber Immediate where
+  toSigned = bitCoerce
+  toUnsigned = bitCoerce

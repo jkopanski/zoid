@@ -1,8 +1,9 @@
 module Registers.General
   ( Register (..) ) where
 
-import Prelude
 import Clash.Class.BitPack
+import Clash.Sized.Index
+import Types
 
 data Register
   = Zero -- Hard-wired zero
@@ -44,3 +45,16 @@ instance BitPack Register where
 
   pack = toEnum . fromEnum
   unpack = toEnum . fromEnum
+
+type Registers t = Vec 32 t
+
+getReg :: Registers t -> Index 32 -> t
+getReg = (!!)
+
+putReg :: Index 32 -> t -> Registers t -> Registers t
+putReg i v r = replace
+
+modifyReg :: Registers t -> Index 32 -> (t -> t) -> Registers t 
+modifyReg regs index f =
+  let v = getReg regs index
+   in replace index (f v) regs

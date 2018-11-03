@@ -1,4 +1,10 @@
+{-# language
+    DuplicateRecordFields
+  #-}
 module Instructions.Common where
+
+import Types
+import Registers
 
 data Format
   = R

@@ -1,6 +1,9 @@
 { mkDerivation, stdenv
 , clash-ghc, clash-prelude, clash-lib
 , shake
+, yosys
+# yosys is missing graphviz dep
+, graphviz-nox
 }:
 mkDerivation rec {
   pname = "zoid";
@@ -8,7 +11,11 @@ mkDerivation rec {
   src = ./.;
   isExecutable = true;
   buildDepends = [ clash-ghc clash-prelude clash-lib ];
-  buildTools = [ shake ];
+  buildTools = [
+    shake
+    yosys
+    graphviz-nox
+  ];
   executableHaskellDepends = [ clash-prelude clash-lib ];
   license = stdenv.lib.licenses.bsd3;
 }

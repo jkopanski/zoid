@@ -1,25 +1,14 @@
-{-# language DataKinds  #-}
-{-# language GeneralizedNewtypeDeriving #-}
-{-# language TypeInType #-}
-{-# language DuplicateRecordFields #-}
+{-# language
+    DuplicateRecordFields
+  , GeneralizedNewtypeDeriving
+  , TypeApplications
+  #-}
 module Zoid where
 
-import Clash.Prelude
-import Control.Monad.State
-import Data.Kind (Type)
-import Registers
+import Clash.Prelude hiding (read)
+import Config
+import Instructions
 import Types
-
-data Config = Config
-  { registers :: Vec 32 (BitVector 32)
-  }
-
-newtype Processor a = Processor { process :: State Config a }
-  deriving ( Functor
-           , Applicative
-           , Monad
-           , MonadState Config
-           )
 
 class Arithmetic n where
   add :: BitVector n -> BitVector n -> Processor (BitVector n)
@@ -29,17 +18,16 @@ class Arithmetic n where
 --   a /= a :: Bool
 --   not a :: a
 
-class Control a where
-  jump :: a
 
-class Load a where
-  load :: a
 
-class Store a where
-  store :: a
+-- class Control a where
+--   jump :: a
 
-type Immediate = BitVector 32
+-- class Load a where
+--   load :: a
 
+-- class Store a where
+--   store :: a
 
 decode :: BitVector 32 -> ISA
 decode = undefined
@@ -52,6 +40,6 @@ decode = undefined
 --   execute :: i -> ProcM ()
    
 topEntity
-  :: BitVector 7
-  -> BitVector 7
-topEntity = id
+  :: ISA
+  -> Processor ()
+topEntity = execute
